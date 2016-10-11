@@ -27,4 +27,4 @@ def tailf(path):
 
 if __name__ == '__main__':
     for line in tailf(sys.argv[1]):
-        print(line, end='')
+        print(line.rstrip('\n'))
