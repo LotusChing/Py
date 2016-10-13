@@ -24,6 +24,11 @@ trigger_rules = {
     'server': 0.3
 }
 
+data = {
+    'client': [0, 0, 0],
+    'server': [0, 0, 0]
+}
+
 
 def read_log(path):
     # TODO multi thread
@@ -64,11 +69,16 @@ def agg(path, write_db_interval=10, check_error_interval=5):
             if (current - start).total_seconds() >= check_error_interval:
                 client_error_rate = client_error / count
                 server_error_rate = server_error / count
-                print('Count: {} Traffic: {}  4xx: {}  5xx: {}'.format(count, traffic, client_error_rate, server_error_rate))
-                if client_error_rate >= trigger_rules['client']:
-                    notification('4xx Problem', 'Found server have {} 4xx problem, Please check server status.'.format(trigger_rules['client']))
-                if server_error_rate >= trigger_rules['server']:
-                    notification('5xx Problem', 'Ferver server have {} 5xx problem, Please check server status.'.format(trigger_rules['server']))
+                if client_error_rate > trigger_rules['client']:
+                    logging.info('client problem, count: {} client_error_rate: {} server_error_rate: {}'.format(count, client_error_rate, server_error_rate))
+                    judge('client', 0)
+                else:
+                    judge('client', 1)
+                if server_error_rate > trigger_rules['server']:
+                    logging.info('server problem, count: {} client_error_rate: {} server_error_rate: {}'.format(count, client_error_rate, server_error_rate))
+                    judge('server', 0)
+                else:
+                    judge('server', 1)
                 start = current
                 count, traffic, client_error, server_error = 0, 0, 0, 0
 
@@ -80,17 +90,38 @@ def agg(path, write_db_interval=10, check_error_interval=5):
             #     count, traffic, client_error, server_error = 0, 0, 0, 0
 
 
-def send(*args):
-    tb_data = 'access_log count={},traffic={},client_error={},server_error={}'.format(*args)
-    res = requests.post('http://127.0.0.1:8086/write', data=tb_data, params={'db': 'Da'})
-    if res.status_code >= 300:
-        print(res.content)
+def judge(item, flag):
+    # 如果出现错误count+1
+    logging.info('Item: {} Count: {}'.format(item, data[item][0]))
+    if flag == 0:
+        data[item][0] += 1
+    else:
+        # 如果flag为其他值则表示指标已恢复，设置统计位为0，标志位为0
+        data[item][1] = 0
+        data[item][0] = 0
+
+    # 如果count>=3则将状态设置为1, 1为异常
+    if data[item][0] >= 3:
+        data[item][1] = 1
+        logging.info('found {} error {} time, set status is no.'.format(item, data[item][0]))
+
+    # 如果状态位为1并且通知位为0，则表示一出现问题，还未通知，则开始触发通知
+    if data[item][1] == 1 and data[item][2] == 0:
+        logging.info('found {} error, start error notification.'.format(item, data[item][0]))
+        notification(item, 'Found {} have error, check server status.'.format(item))
+        data[item][2] = 1
+
+    # 如果通知位为1，状态位为0，则表示之前出过问题，现在已经恢复，发送恢复通知
+    if data[item][1] == 0 and data[item][2] == 1:
+        notification(item, 'Found {} recovery, current status is ok.'.format(item))
+        data[item][2] = 0
+        logging.info('found {} recovery, start ok notification.'.format(item))
 
 
 def notification(subject, content):
     smtp_server = 'smtp.139.com'
-    mail_user = 'user'
-    mail_pass = 'pass'
+    mail_user = '13521095342@139.com'
+    mail_pass = '13521095342lc'
     me = mail_user+"<"+mail_user+">"
     msg = MIMEText(content, _charset='gbk')
     msg['Subject'] = subject
@@ -104,6 +135,13 @@ def notification(subject, content):
         s.close()
     except Exception as e:
         logging.warning(e)
+
+
+def send(*args):
+    tb_data = 'access_log count={},traffic={},client_error={},server_error={}'.format(*args)
+    res = requests.post('http://127.0.0.1:8086/write', data=tb_data, params={'db': 'Da'})
+    if res.status_code >= 300:
+        print(res.content)
 
 
 if __name__ == '__main__':
