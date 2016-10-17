@@ -120,8 +120,8 @@ def judge(item, flag):
 
 def notification(subject, content):
     smtp_server = 'smtp.139.com'
-    mail_user = '13521095342@139.com'
-    mail_pass = '13521095342lc'
+    mail_user = 'username'
+    mail_pass = 'pass'
     me = mail_user+"<"+mail_user+">"
     msg = MIMEText(content, _charset='gbk')
     msg['Subject'] = subject
