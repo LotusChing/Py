@@ -65,7 +65,7 @@ def latest_data(db, tb):
 
 
 def newtest_data(data, weather_info):
-    newtest_id = data['id']
+    newtest_id = int(data['id'])
     newtest_id += 1
     weather_data = {
                     "id": str(newtest_id),
