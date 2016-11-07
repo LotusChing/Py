@@ -15,8 +15,7 @@ class Agent(object):
     def callback(self, ch, method, props, body):
         body=body.decode()
         parsed_json = json.loads(body)
-        server = parsed_json['server']
-        cmd = parsed_json['cmd']
+        server, cmd = parsed_json['server'], parsed_json['cmd']
         commands = 'ssh ' + server + ' ' + cmd
         data, err = subprocess.Popen(commands, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         ch.basic_publish(exchange='',
