@@ -1,13 +1,17 @@
 import pika
 import uuid
+import json
 deny_cmd = ['rm', 'dd', 'reboot', 'init', 'vim', 'service']
-
+server_list = [
+    '192.168.2.10',
+    '192.168.2.20'
+]
 
 class Center(object):
     def __init__(self):
-        auth = pika.credentials.PlainCredentials(username='Da', password='Da')
+        auth = pika.credentials.PlainCredentials(username='Lotus', password='Ching')
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    host='1.1.1.1',
+                    host='120.24.80.34',
                     port=80,
                     credentials=auth))
         self.channel = self.connection.channel()
@@ -22,7 +26,7 @@ class Center(object):
     def on_response(self, ch, method, props, body):
         self.response = body
 
-    def request(self, n):
+    def request(self, data):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(exchange='',
@@ -31,7 +35,7 @@ class Center(object):
                                        reply_to=self.callback_queue,
                                        correlation_id=self.corr_id
                                         ),
-                                   body=str(n)
+                                   body=json.dumps(data)
                                    )
         while self.response is None:
             self.connection.process_data_events()
@@ -41,9 +45,18 @@ if __name__ == '__main__':
     try:
         center = Center()
         while True:
-            commands = str(input('Please input commands: '))
-            response = center.request(commands).decode()
-            print(response)
+            for index, server in enumerate(server_list):
+                print('{}. {}'.format(index, server))
+            servers = str(input('Please choice Server: ')).split()
+            commands = str(input('Commands: '))
+            for server in servers:
+                data = {
+                    'server': server_list[int(server)],
+                    'cmd': commands
+                }
+                response = center.request(data).decode()
+                print('Server: {}\n Result: {}'.format(server_list[int(server)], response))
     except KeyboardInterrupt:
         print('Exit.\n')
         exit()
+
