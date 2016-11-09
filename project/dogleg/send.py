@@ -9,10 +9,10 @@ server_list = [
 
 class Center(object):
     def __init__(self):
-        auth = pika.credentials.PlainCredentials(username='Lotus', password='Ching')
+        auth = pika.credentials.PlainCredentials(username='user', password='pass')
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    host='120.24.80.34',
-                    port=80,
+                    host='1.1.1.1',
+                    port=1,
                     credentials=auth))
         self.channel = self.connection.channel()
 
