@@ -3,16 +3,23 @@ import uuid
 import json
 deny_cmd = ['rm', 'dd', 'reboot', 'init', 'vim', 'service']
 server_list = [
-    '192.168.2.10',
-    '192.168.2.20'
+    '10.42.4.84',
+    '10.42.4.85',
+    '10.42.4.86',
+    '10.42.4.87',
+    '10.40.15.21',
+    '10.40.15.22',
+    '10.40.15.23',
+    '10.40.15.31',
+    '10.40.15.32'
 ]
 
 class Center(object):
     def __init__(self):
-        auth = pika.credentials.PlainCredentials(username='user', password='pass')
+        auth = pika.credentials.PlainCredentials(username='Lotus', password='Ching')
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    host='1.1.1.1',
-                    port=1,
+                    host='120.24.80.34',
+                    port=80,
                     credentials=auth))
         self.channel = self.connection.channel()
 
@@ -59,4 +66,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Exit.\n')
         exit()
-

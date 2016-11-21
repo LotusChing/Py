@@ -5,10 +5,10 @@ import subprocess
 
 class Agent(object):
     def __init__(self):
-        self.auth = pika.credentials.PlainCredentials(username='user', password='pass')
+        self.auth = pika.credentials.PlainCredentials(username='Lotus', password='Ching')
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-                    host='1.1.1.1',
-                    port=11,
+                    host='120.24.80.34',
+                    port=80,
                     credentials=self.auth))
         self.channel = self.connection.channel()
 
@@ -28,7 +28,7 @@ class Agent(object):
 
     def consume(self):
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(self.callback, queue='cmd')
+        self.channel.basic_consume(self.callback, queue='pek_cmd')
         print(' [*] Waiting for messages. To exit press CTRL+C')
         self.channel.start_consuming()
 
