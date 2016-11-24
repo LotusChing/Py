@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 def build_jobs(branch):
     # 拼接jobs名称
-    jobs_url = 'http://LotusChing:LotusChing@120.24.80.34:2222/job/{}/build'.format(branch)
+    jobs_url = 'http://user:pass@host:port/job/{}/build'.format(branch)
     # 提交post
     requests.post(jobs_url)
 
