@@ -1,48 +1,48 @@
 # coding:utf-8
 
 import json
+import time
 import requests
+from pprint import pprint
 
 
 def post_api(method=None, data=None, url=None):
-    api_name = url.split('/')[-1]
+    # 请求api，返回响应码、接口响应时间
+    start_time = time.time()
     resp = requests.request(method=method, params=data, url=url)
-    text = json.loads(resp.text)
-    if resp.status_code != 200 or text['code'] != 1:
-        print('{}  Failed.'.format(api_name))
-        print(resp.text)
-    else:
-        print('{}  Successful.'.format(api_name))
+    status = {
+        'http_code': resp.status_code,
+        'time': time.time() - start_time
+    }
+    return status
 
 
-def orders(data, order_id):
-    order_data = {}
-    requests_data = data['requests']
-    for request in requests_data:
+def get_api_info(request_data, order_id):
+    # 获取api的method、url、以及参数数据
+    api_info = {}
+    for request in request_data:
         if request['id'] == order_id:
-            order_data['url'] = request['url'].replace('{{host}}', 'http://106.14.37.210/UAirServer/app/')
-            order_data['method'] = request['method']
+            api_info['url'] = request['url'].replace('{{host}}', 'https://uair.aiplatform.com.cn/UAirServer/app/')
+            api_info['api_name'] = request['url'].split('/')[-1]
+            api_info['method'] = request['method']
             if request['data'] is None:
-                order_data['data'] = 'None'
+                api_info['data'] = 'None'
             else:
-                order_data['data'] = {item['key']: item['value'] for item in request['data']}
-            post_api(order_data['method'], order_data['data'], order_data['url'])
-    return order_data
+                api_info['data'] = {item['key']: item['value'] for item in request['data']}
+    return api_info
 
-
-def floders(data):
-    floders_data = data['folders']
-    for floder in floders_data:
-        floder_name = floder['name']
-        floder_order = floder['order']
-        print(floder_name)
-        for order_id in floder_order:
-            order_data = orders(data, order_id)
-           # print('\t', order_data)
-    return 0
 
 if __name__ == '__main__':
-    with open('UAirServer.postman_collection') as f:
+    # 读取Postman export的json文件
+    with open('/prodata/scripts/zabbix/uair_api.json', encoding='utf8') as f:
         data = json.load(f)
         project_name = data['name']
-        floder_data = floders(data)
+        all_data = {}
+        for floder_data in data['folders']:
+            floder_name = floder_data['name']
+            all_data[floder_name] = {}
+            for order_id in floder_data['order']:
+                order_info = get_api_info(data['requests'], order_id)
+                all_data[floder_name][order_info['api_name']] = post_api(order_info['method'], order_info['data'], order_info['url'])
+        f = open('/prodata/scripts/zabbix/api_status.json', 'w')
+        f.write(json.dumps(all_data))
