@@ -22,7 +22,7 @@ def get_api_info(request_data, order_id):
     api_info = {}
     for request in request_data:
         if request['id'] == order_id:
-            api_info['url'] = request['url'].replace('{{host}}', 'https://uair.aiplatform.com.cn/UAirServer/app/')
+            api_info['url'] = request['url'].replace('{{host}}', 'https://host.domain.com.cn/project/')
             api_info['api_name'] = request['url'].split('/')[-1]
             api_info['method'] = request['method']
             if request['data'] is None:
